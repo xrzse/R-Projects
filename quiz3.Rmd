@@ -1,0 +1,37 @@
+---
+title: "Quiz3"
+author: "ManavSharma-400451088"
+date: "2023-04-03"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(34)
+library(tidyverse)
+```
+
+```{r}
+data(us_contagious_diseases, package = "dslabs")
+ 
+tib_ <- us_contagious_diseases %>%
+  filter(state %in% c("Florida", "California"), disease %in% "Measles") %>%
+  mutate(rate = count / population * 1e6) %>%
+  select(state, disease, year, rate) %>%
+  mutate(yr = as.Date(paste0(year, "-01-01"), format = "%Y-%m-%d"))
+
+tib_ %>%
+  glimpse()
+```
+
+```{r}
+tib_ %>%
+  ggplot(aes(x = yr, y = rate, color = state)) +
+  geom_line(size = 0.75) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%Y") +
+  labs(title = "Measles Incidence in California and Florida",
+       x = "Year", y = "Incidence Rate",
+       color = "States") +
+  theme_minimal()
+```
+

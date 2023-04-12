@@ -1,0 +1,147 @@
+---
+title: "Midterm1DWP"
+author: "Manav Sharma 400451088"
+date: "2023-03-10"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(magrittr)
+library(knitr)
+opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE, error = FALSE)
+set.seed(34)
+```
+# Iteration 1
+
+## Phase 1
+
+1. Read CSV file into `R`
+2. Specify column types
+3. Change the column names to lowercase.
+4. Identify the uid's.
+5. Check that they are unique.
+6. Check if the data is in `Tidy` format.
+7. Sort tibble by uids.
+
+## Phase 2
+```{r}
+#1 & 2
+data <- read_csv("/Users/manavsharma/Desktop/Data Science/midterm.csv")
+#3
+data %<>%
+  rename_with(tolower)
+
+data %>%
+  glimpse()
+```
+
+```{r}
+#4 & 5
+data %>%
+  count(id,country) %>%
+  filter(n>1)
+data %>%
+  count(country) %>%
+  filter(n>1)
+```
+
+```{r}
+#6
+data_tidy <- data %>%
+  pivot_longer(!c(id,country), names_to="quarter_num", values_to = "val")
+data_tidy %>%
+  glimpse()
+
+#7
+data_tidy %<>%
+  select(id,country,quarter_num,val) %>%
+  arrange(id,country)
+```
+
+## Iteration 2
+### Phase 1
+1. Separate columns if needed
+2. Check for outliars, set to NA
+2. Check for NA values, drop all NA values
+4. Recode character columns as factors
+
+```{r}
+#1
+data_tidy %<>% separate(quarter_num, c("quarter","quarter_num"), sep = "_") %>%
+  mutate(quarter_num = as.numeric(quarter_num))
+
+data_tidy %>%
+  slice(1:10) %>%
+  kable()
+```
+```{r}
+data_tidy %>%
+  summary() #No NA
+```
+##The summary tells us,
+1. quarter_num is good
+2. val has outliars -999.9990.
+3. There are no 'NA' values
+
+```{r}
+data_tidy %<>% mutate(
+  val = na_if(val, -999.9990)
+)
+##check 
+data_tidy %>%
+  pull(val) %>%
+  summary()
+```
+```{r}
+data_tidy %<>%
+  drop_na()
+
+data_tidy %>%
+  summary()
+```
+```{r}
+data_tidy %>%
+  glimpse()
+```
+```{r}
+data_tidy %<>%
+  mutate(id = as.factor(id), country = as.factor(country), quarter = as.factor(quarter))
+
+data_tidy %>%
+  slice(1:20) %>%
+  kable()
+```
+
+\newpage
+#2a
+```{r}
+data_tidy %>%
+  group_by(country, quarter_num) %>%
+  summarise(mean = mean(val))
+```
+#2bcd
+```{r}
+data2 <- data_tidy %>%
+  mutate(dif = abs(mean(val) - median(val))) %>%
+  arrange(desc(dif)) %>%
+  filter(dif > 0.3)
+
+data2 %>%
+  glimpse()
+```
+###e.
+There are no combinations of dif > 0.3
+
+\newpage
+#Bonus question
+```{r}
+data_untidy <- data_tidy %>%
+  pivot_wider(!c(quarter,quarter_num,), names_from = country, values_from = val) %>%
+  slice(21:28)
+
+data_untidy %>%
+  glimpse()
+```
+

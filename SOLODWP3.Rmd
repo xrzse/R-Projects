@@ -1,0 +1,50 @@
+---
+title: "DWPSOLO3"
+author: "Manav-400451088"
+date: "2023-03-09"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(magrittr)
+library(knitr)
+
+set.seed(34)
+
+opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE, error = FALSE)
+```
+
+\newpage
+
+# Iteration 1
+
+## Phase 1
+
+1. Read CSV file into `R`
+    - Specify column types?
+2. Change the column names to lowercase.
+3. Identify the uid's.
+    - Check that they are unique.
+4. Check if the data is in `Tidy` format.
+5. Sort tibble by uids.
+
+## Phase 2
+
+
+
+
+
+
+
+\newpage
+
+# Iteration 2
+
+## Phase 1
+
+1. Check for `NA` values in each column
+2. Look for outliers in numeric columns
+3. Convert `console` column to a factor
+
+## Phase 2

@@ -1,0 +1,92 @@
+---
+title: "DWP2"
+author: "Manav-400451088"
+date: "2023-03-08"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(34)
+library(tidyr)
+library(tidyverse)
+library(magrittr)
+library(knitr)
+opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE, error = FALSE)
+```
+## Iteration 1
+### Phase 1
+1. Read in CSV file
+2. Make all columns into character
+3. Convert column names to lowercase
+4. Determine the uid's, get rid of index columns
+5. Tidy the data
+6. Reorder the columns so uid's are first
+7. Sort by uid's
+```{r}
+#1,2
+data <- read_csv("/Users/manavsharma/Desktop/Data Science/console.csv", col_types = "ccccccc") %>%
+  #3
+  rename_with(tolower)
+
+data %>%
+  glimpse()
+
+```
+Determine UID
+```{r}
+data %>%
+  count(console)%>%
+  filter(n>1)
+```
+Console is a UID
+```{r}
+data %<>% 
+  select(!index)
+
+data1 <- data %>%
+  pivot_longer(!console,names_to = "region",values_to = "sales")
+
+data1 %>%
+  glimpse()
+```
+Now we sort by UID
+```{r}
+data1 %<>% arrange(console)
+data1 %>%
+  slice(1:5) %>%
+  kable()
+
+```
+## Iteration 2
+### Phase 1
+1. Convert all columns into factor
+2. Check for Ouliars and set to NA
+3. Remove all NA's
+
+```{r}
+data1 %<>%
+  mutate(console = as.factor(console), region = as.factor(region), sales = as.factor(sales))
+
+data1 %>%
+  summary()
+```
+
+Sales has 80 NA's. Lets remove them.
+```{r}
+data1 %<>%
+  drop_na(sales)
+
+data1 %$%
+  is.na(sales)%>%
+  any()
+```
+Now we have got rid of all NA's.
+
+The DWP is now finished
+```{r}
+data1 %>%
+  kable()
+```
+
+

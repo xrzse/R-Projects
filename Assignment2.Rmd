@@ -1,0 +1,139 @@
+---
+title: "Assignment_2"
+author: "Manav-400451088"
+date: "2023-02-17"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(34)
+library(dplyr)
+library(readr)
+library(magrittr)
+library(knitr)
+library(tidyverse)
+```
+
+```{r, echo=FALSE, eval=FALSE}
+idrfunction <- function(x) {
+  quan <- unname(quantile(x, probs = seq(0, 1, 1/10), na.rm = TRUE))
+  ans <- quan[9] - quan[1]
+  return(ans)
+}
+
+
+tidyfunc <- myx,na.rm = TRUE)
+    idr_ <- idrfunction(myx)
+   q1b <- c(sd=sd_,idr=idr_) %>%
+    round(2)
+}
+
+idr_sd_infant_mortality <- gapminder %>%
+  pull(infant_mortality)%>%
+  tidyfunc()
+idr_sd_fertility <- gapminder %>%
+  pull(fertility)%>%
+  tidyfunc()
+
+final_ans <- c(fertlity=idr_sd_fertility,infant_mortality=idr_sd_infant_mortality)
+final_ans
+```
+# Question 2
+
+### The data I am analyzing is of temperatures throughout the months of September to January 2022 -> 2023
+### The columns include:
+* CHR1 - Will be removed due to no importance to the data
+* CHR4 - Will be renamed into "temperature" because it shows the temperature
+* SEP/22 - September 2022, will be lowered
+* Oct/22 - October 2022, will be lowered
+* nov/22 - November 2022, will be kept the same
+* dEc/22 - December 2022, will be lowered
+* JaN/23 - January 2023, will be lowered
+
+# Iteration 1
+## Phase 1
+1. Read CSV file into R
+    * Specify column types?
+2. Change the column names to lowercase
+3. Identify the uids
+    * Check that they are unique
+4. Check if the data is in Tidy format
+5. Sort tibble by uids.
+
+# Phase 2
+```{r,echo=TRUE,eval=TRUE}
+###Read CSV files into R
+yay <- read_csv("./as2.csv", col_types = "ccnnnnn", col_names = c("trash", "feels_like","sep_2022","oct_2022","nov_2022","dec_2022","jan_2023"))
+###Making all the column names look better and removing the / since
+###/ is a divider and will get annoying to work with columns with it
+
+#"trash" seems to just be a random letter column
+yay %>% count(trash) %>% filter(n>1) %>% slice(1:5) %>% kable()
+#feels_like has a few problems such as "M", "MED" not being consistent with med
+yay %>% count(feels_like) %>% filter(n>1) %>% slice(1:5) %>% kable()
+yay %>%
+  glimpse()
+```
+### Based on the results, "feels_like" looks like a good candiate for the uid
+# Iteration 2
+## Phase 1
+1. Check for NA values in each columns
+2. Look for outliers in numeric columns
+3. Check the values in the character columns
+4. Double check
+
+## Phase 2
+```{r,echo=TRUE,eval=TRUE}
+###Based on the summary there are outliers and NA values throughout the data
+summary(yay)
+
+###Lets first get rid of the trash column
+yay2 <- yay %>%
+  select(-c(trash))
+
+###Now if we display this we see that the first row is actually actually useless 
+###since it doesn't correlate with the data being given.
+yay2 
+###Removing the first row and removing NA rows.
+yay3 <- yay2 %>%
+  drop_na() %>%
+  slice(-1)
+yay3
+###Now if we look at feels_like column we see the rows are inconsistent.
+yay3 %>% count(feels_like) %>% filter(n>1) %>% slice(1:5) %>% kable()
+###So lets fix that
+yay4 <- yay3 %>% 
+  mutate(feels_like = str_replace(feels_like, "MED", "med"))%>%
+  mutate(feels_like = str_replace(feels_like, "M", "med"))%>%
+  mutate(feels_like = str_replace(feels_like, "medEdIUM", "med"))%>%
+  mutate(feels_like = str_replace(feels_like, "mededium", "med"))
+yay4 %>% count(feels_like) %>% filter(n>1) %>% slice(1:5) %>% kable()
+###Now if we check the summary we see the NA values are gone and same with
+###the trash column.
+summary(yay4)
+###Now lets gets rid of the outliers. By inspection we can see the last row
+###of "yay4" is filled with outliers so we can simply remove the row.
+yay_final <- yay4 %>%
+  slice(-92)
+
+###Now finally, we doublecheck for completeness
+
+yay_final%>%pull(feels_like)%>% is.na()%>%any()
+yay_final%>%pull(sep_2022)%>% is.na()%>%any()
+yay_final%>%pull(oct_2022)%>% is.na()%>%any()
+yay_final%>%pull(nov_2022)%>% is.na()%>%any()
+yay_final%>%pull(dec_2022)%>% is.na()%>%any()
+yay_final%>%pull(jan_2023)%>% is.na()%>%any()
+
+###We check the summary once again.
+###The summary looks good
+summary(yay_final)
+
+###Finally, we have the final and cleaned data
+kable(yay_final)
+
+
+```
+
+

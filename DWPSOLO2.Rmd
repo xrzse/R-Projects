@@ -1,0 +1,118 @@
+---
+title: "DWPSOLO2"
+author: "Manav-400451088"
+date: "2023-03-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r, include=FALSE, echo=FALSE, eval=TRUE}
+library(tidyverse)
+library(magrittr)
+library(knitr)
+
+set.seed(34)
+
+opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE, error = FALSE)
+```
+
+1. Read CSV file into `R`
+    - Specify column types
+2. Change the column names to lowercase
+3. Identify the uid's
+    - Check that they are unique
+4. Check if the data is in `Tidy` format
+5. Sort tibble by uids
+```{r}
+#1,2
+tib <- read_csv("/Users/manavsharma/Desktop/Data Science/vgsales.csv", col_types = "ccccccccccc")
+tib %<>%
+  rename_with(tolower)
+tib %>%
+  glimpse()
+```
+Identifying the UID's
+```{r}
+tib %>%
+  count(rank)%>%
+  filter(n>1) #rank is unique
+
+tib %>%
+  count(genre)%>%
+  filter(n>1) #genre is unique
+```
+Now that we have our UID's we will tidy the data.
+```{r}
+tib_ <- tib %<>%
+  pivot_longer(!c(rank,name,platform,year,genre,publisher), values_to = "values", names_to = "sales")
+
+tib_ %>%
+  glimpse()
+```
+Now our data is tidy.
+Now we sort by our UID's
+```{r}
+tib_ %<>%
+  select(rank,genre,everything())
+tib_ %>%
+  glimpse()
+```
+# Iteration 2
+
+## Phase 1
+1. Convert all columns to factor
+2. Look for outliers in numeric columns, make them into NA
+3. Check for NA values, and then drop them all.
+
+## Phase 2
+```{r}
+tib_ %<>%
+  mutate(rank=as.factor(rank),genre = as.factor(genre),name = as.factor(name),platform = as.factor(platform),year = as.factor(year),publisher = as.factor(publisher),sales = as.factor(sales),values=as.factor(values))
+
+tib_ %>%
+  summary()
+```
+Rank is good
+Genre is good
+Name is good
+Platform is good
+Year is good
+Publisher is good
+Sales is good
+Values is good
+
+Now we check just incase
+```{r}
+tib_ %$%
+  is.na(rank)%>%
+  any()
+tib_ %$%
+  is.na(genre)%>%
+  any()
+tib_ %$%
+  is.na(name)%>%
+  any()
+tib_ %$%
+  is.na(platform)%>%
+  any()
+tib_ %$%
+  is.na(year)%>%
+  any()
+tib_ %$%
+  is.na(publisher)%>%
+  any()
+tib_ %$%
+  is.na(year)%>%
+  any()
+tib_ %$%
+  is.na(values)%>%
+  any()
+```
+Alright we good now,
+```{r}
+tib_ %>%
+  slice(1:50) %>%
+  kable()
+```
+

@@ -1,0 +1,40 @@
+---
+title: "quiz2"
+author: "ManavSharma-400451088"
+date: "2023-03-20"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(34)
+library(tidyverse)
+library(magrittr)
+```
+
+```{r,echo=TRUE,eval=TRUE}
+data(us_contagious_diseases, package = "dslabs")
+tib_ <- us_contagious_diseases %>%
+  drop_na()
+
+tib_ %<>%
+  mutate(rate = count/population *100000)
+tib_ %>%
+  glimpse()
+
+tib_agg <- tib_ %>%
+  group_by(disease,state) %>%
+  summarise("disease"=disease,
+            mean_rate= mean(rate)) %>%
+  ungroup()
+```
+```{r}
+tib_agg %>%
+  ggplot(aes(mean_rate, disease, fill=disease))+
+  geom_density(position = "dodge")+
+  geom_rug()+
+  theme_bw()+
+  labs(x = "Rate", y = "Diseases", title="Disease rates")
+  
+```
+
