@@ -1,0 +1,215 @@
+---
+title: "A Analysis of Netflix's Content Distribution"
+author: "ManavSharma-400451088"
+date: "2023-04-17"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(magrittr)
+library(knitr)
+opts_chunk$set(echo = TRUE, eval = TRUE)
+set.seed(34)
+```
+
+# Introduction
+
+Netflix is a popular worldwide streaming platform that offers a wide variety of movies, TV shows, and documentaries to its subscribers. Founded in 1997, the platform allows its subscribers to have access to millions of titles through a monthly subscription. Over the years the platform has reached over 190 countries, it has dominated its market and become a billion dollar company, consistently earning billions in revenue annually.
+
+In this analysis, we will seek to answer three key questions regarding Netflix's content distribution strategy:
+
+1.  What types of media are most commonly released on the platform?
+
+2.  Which countries release the most content?
+
+3.  Which rating categories are most frequently released?
+
+The [Netflix dataset from Kaggle.com](https://www.kaggle.com/datasets/ariyoomotade/netflix-data-cleaning-analysis-and-visualization) is the dataset that I will be using to conduct this analysis. It is a valuable resource for analyzing the companies content distribution. The dataset contains information on thousands of movies and TV shows available on Netflix, including title, country of release, rating, genre, and more. What makes this data set interesting is that it will be useful for answering my questions since It has all the columns that I need and it will give us a insight on other things such as Netflix's distribution strategy.
+
+\newpage
+
+# Data Wrangling Plan
+
+## Iteration 1:
+
+### Phase 1:
+
+1.  Read the csv file into R
+2.  Make columns lowercase
+3.  Determine if data is tidy
+4.  Reorder so uid's are first and drop unnecessary columns
+
+### Phase 2:
+
+```{r}
+#1
+data <- read_csv("/Users/manavsharma/Desktop/Data Science/Final project/netflix1.csv")
+#2
+data %<>%
+  rename_with(tolower)
+#3
+data %>%
+  glimpse()#The data is tidy
+```
+\newpage
+```{r}
+#4
+data %>%
+  count(title)%>%
+  filter(n>1) #title is a unique uid after removing the duplicate movies
+
+data <- data %>%
+  select(title,type,country,rating)
+
+data %>%
+  glimpse()
+```
+\newpage
+
+## Iteration 2
+
+### Phase 1:
+
+1.  Check for NA values
+2.  Convert any misleading values such as "Not Given" into NA values
+3.  Remove any duplicate values
+4.  Drop all NA values
+5.  Convert columns to factor columns
+6.  Sort by UID
+
+### Phase 2:
+
+```{r}
+#1
+data %>% 
+  summary() #No NA values
+```
+
+```{r}
+"Not Given" %in% data$country #There are "Not Given" values present
+#2
+data <- data %>% 
+  mutate(country = na_if(country, "Not Given"))
+
+"Not Given" %in% data$country #"Not Given" values have been removed
+```
+
+```{r}
+#3
+data %>%
+  count(title) %>%
+  filter(n>1) #There are duplicates
+
+data <- data %>% 
+  distinct(title, .keep_all = TRUE)
+
+data %>%
+  count(title) %>%
+  filter(n>1) #Duplicates have been removed and title is now a unique UID
+```
+```{r}
+#4
+data %>%
+  dim_desc()
+
+data %<>%
+  drop_na()
+
+data %>%
+  dim_desc() #287 rows containing NA values have been dropped
+```
+
+```{r}
+#5
+data %<>%
+  mutate_all(as.factor)
+```
+
+```{r}
+#6
+data %<>%
+  arrange(title)
+
+data %>%
+  glimpse()
+```
+
+```{=tex}
+\begin{center}
+Data Wrangling Plan is finished
+\end{center}
+\newpage
+```
+# Results/Discussion:
+
+## Question 1:
+
+### What types of media are most commonly released on the platform?
+
+```{r,echo=FALSE,warning=FALSE,fig.cap="Depicts that the platform Netflix exhibits a greater tendency to release movies."}
+data %>%
+  count(type) %>%
+  ggplot(aes(x = type, y = n,fill=type)) +
+  geom_col(color="black") +
+  labs(x = "Media Type", y = "Media released", title = "Movies vs TV shows released onto Netflix", fill="Media type")+
+  scale_fill_manual(values = c("#564d4d", "#831010"))+
+  theme_minimal()
+```
+
+There could be several reasons why movies are released more frequently on Netflix than TV shows. One major reason is that movies have a wider appeal and are marketed much more heavily compared to the average TV show causing movies to attract a bigger audience. Additionally, producing a TV show requires ongoing production and investment, while movies are often one-time investments. Finally, Netflix may have a larger selection of movies available for licensing compared to TV shows. 
+\newpage
+
+## Question 2:
+
+### What countries release the most content?
+
+```{r,echo=FALSE,warning=FALSE,fig.cap="Displays the countries with the most media content released on Netflix, ranked in descending order."}
+data %>%
+  group_by(country) %>%
+  summarise(count = n()) %>%
+  top_n(5, count) %>%
+  inner_join(data, by = "country") %>%
+  ggplot(aes(x = reorder(country, -count), fill = type)) +
+  geom_bar(stat = "count", position = "dodge", color="black") +
+  labs(x = "Country", y = "Media Released", title="Top 5 Countries with the Highest Number of Content on Netflix", fill = "Media Type") +
+  scale_fill_manual(values = c("#564d4d", "#831010")) +
+  theme_minimal()
+```
+
+From our result we can conclude that the United States by far releases the most media onto Netflix. My hypothesis for this question was incorrect, India falls significantly short in terms of the number of releases compared to the United States. While Bollywood surpasses Hollywood in terms of production, Netflix acquires more films for its larger demographic audience, such as Canada, the United States, and Europe.
+
+\newpage
+
+## Question 3:
+
+### Which rating categories are most frequently released?
+
+```{r,echo=FALSE,warning=FALSE,fig.cap="Displays all of Netflix's ratings in order from most frequent to least."}
+data %>%
+  count(rating) %>%
+  ggplot(aes(reorder(rating, -n), y = n, group = 1, fill=n)) +
+  geom_bar(stat = "identity", color = "black")+
+  geom_line(color = "black", alpha = 0.5) +
+  geom_point(color = "black", size = 2) +
+  scale_fill_gradient(low = "#831010", high = "#564d4d")+
+  labs(x = "Rating", y = "Number of times used", fill= "Frequency", title = "Frequency Distribution of Most Common Netflix Ratings") +
+  theme_minimal()+
+  guides(x=guide_axis(angle=45))
+```
+
+After analyzing the data, it turns out that my initial prediction of PG-13 being the most commonly used rating on Netflix is incorrect. Surprisingly, the most frequently used rating is TV-MA. This finding is particularly interesting as I expected Netflix to produce more PG-13 content considering the large number of children who watch TV for extended periods of time. However, the prevalence of TV-MA rating is significantly higher than that of PG-13.
+\newpage
+
+# Conclusion
+
+My analysis provides insights into three different hypotheses related to the content available on Netflix. 
+
+1. My first hypothesis was that movies are released more frequently than TV shows on the platform. My analysis supports this hypothesis, and we have identified several reasons why this may be the case, including wider appeal, heavy marketing, and easier licensing.
+
+2. My second hypothesis was that India, being the largest producer of films, releases the most media onto Netflix. However, my analysis found that the United States is the clear leader in terms of the number of releases, followed by India. This could be because Netflix acquires more films for its larger demographic audience in North America and Europe. 
+
+3. My third hypothesis was that PG-13 would be the most common rating for content on Netflix. However, my analysis found that TV-MA is the most commonly used rating, which was unexpected, given the large number of children who watch TV on the platform.
+
+Overall, while some of our hypotheses were proven incorrect, the data analysis provides us with valuable insights into the trends of media released on Netflix.
